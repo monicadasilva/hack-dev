@@ -1,0 +1,1 @@
+# Funções personalizadas para aplicar no sistema
