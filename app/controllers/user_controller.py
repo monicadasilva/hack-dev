@@ -62,8 +62,7 @@ def update_avatar(id):
     session.commit()
     
     
-    user = UserModel.query.filter_by(id=id).update({'avatar_id': img.id})
+    UserModel.query.filter_by(id=id).update({'avatar_id': img.id})
     session.commit()
-
 
     return '', 204
