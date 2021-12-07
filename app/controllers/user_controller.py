@@ -1,6 +1,8 @@
 from os import name
 from flask import request, current_app, jsonify
 from werkzeug.utils import secure_filename
+from app.controllers import verify
+from app.exceptions.exceptions import InvalidInput, InvalidKey
 from app.models.avatar_model import AvatarModel
 from app.models.users_model import UserModel
 from flask_jwt_extended import create_access_token
@@ -41,6 +43,7 @@ def create_user():
     data = request.get_json()
 
     try:
+        verify(data)
         user = UserModel(**data)
         session.add(user)
         session.commit()
