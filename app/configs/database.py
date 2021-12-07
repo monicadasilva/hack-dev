@@ -11,4 +11,5 @@ def init_app(app: Flask):
     from app.models.skills_model import SkillsModel
     from app.models.address_model import AddressModel
     from app.models.users_model import UserModel
+    from app.models.sponsors_model import SponsorModel
     app.db = db
