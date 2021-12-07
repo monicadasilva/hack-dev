@@ -10,4 +10,6 @@ def init_app(app: Flask):
     from app.models.prize_model import PrizeModel
     from app.models.skills_model import SkillsModel
     from app.models.address_model import AddressModel
+    from app.models.group_model import GroupModel
+
     app.db = db
