@@ -19,6 +19,7 @@ class AdminModel(db.Model):
     email = Column(String, nullable=False, unique=True)
     password = Column(String, nullable=True)
     avatar = Column(String, nullable=False)
+    # token = Column(String, nullable=True)
    
 
     @property

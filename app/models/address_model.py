@@ -1,5 +1,4 @@
 from sqlalchemy import Column, Integer, String
-from sqlalchemy.orm import backref
 from sqlalchemy.sql.schema import ForeignKey
 from app.configs.database import db
 from dataclasses import dataclass
@@ -25,6 +24,3 @@ class AddressModel(db.Model):
     state = Column(String, nullable=False)
     zip_code = Column(String, nullable=False)
 
-    user_id = Column(Integer, ForeignKey('users.id'), nullable=False, unique=True)
-
-    user = db.relationship('UserModel', backref=backref('adress', uselist=False), uselist=False)

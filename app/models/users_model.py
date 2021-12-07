@@ -28,6 +28,8 @@ class UserModel(db.Model):
 
     events = relationship("EventsModel", backref=backref("users"), uselist=False)
 
+    address = db.relationship('AddressModel', backref=backref('users'), uselist=False)
+    
     @property
     def password(self):
         raise AttributeError("Password not found!")
@@ -38,3 +40,4 @@ class UserModel(db.Model):
 
     def verify_password(self, password):
         return check_password_hash(self.password, password)
+

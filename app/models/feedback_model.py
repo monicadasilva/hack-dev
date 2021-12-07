@@ -2,6 +2,7 @@ from sqlalchemy.sql.sqltypes import Integer
 from app.configs.database import db
 from sqlalchemy import Column, Text ,ForeignKey
 from dataclasses import dataclass
+from sqlalchemy.orm import backref, relationship
 
 @dataclass
 class FeedbackModel(db.Model):
@@ -18,3 +19,6 @@ class FeedbackModel(db.Model):
     event_id = Column(Integer, ForeignKey('events.id'), nullable=False)
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
     feedback = Column(Text)
+    
+    event = relationship("EventsModel", backref=backref("feedback"), uselist=False)
+    user = relationship('UserModel', backref=backref('feedback'), uselist=False)

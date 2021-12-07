@@ -1,6 +1,7 @@
 from sqlalchemy import Column, Integer, String, ForeignKey, DateTime
 from app.configs.database import db
 from dataclasses import dataclass
+from sqlalchemy.orm import backref
 
 
 @dataclass
@@ -28,3 +29,6 @@ class EventsModel(db.Model):
         ForeignKey("sponsors.id"),
         nullable=False
     )
+
+    skill = db.relationship("SkillsModel", backref=backref("event"), uselist=False)
+    sponsor = db.relationship('SponsorModel', backref=backref('event'), uselist=False)
