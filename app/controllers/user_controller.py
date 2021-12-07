@@ -1,6 +1,8 @@
 from os import name
 from flask import request, current_app, jsonify
 from werkzeug.utils import secure_filename
+from app.controllers import verify
+from app.exceptions.exceptions import InvalidInput, InvalidKey
 from app.models.avatar_model import AvatarModel
 from app.models.users_model import UserModel
 from flask_jwt_extended import create_access_token
@@ -39,11 +41,18 @@ def create_user():
     data = request.get_json()
     
     try:
+        verify(data)
         user = UserModel(**data)
         session.add(user)
         session.commit()
         
-        return {'id':user.id, 'name': user.name, 'password':user.password_hash, 'points': user.points}, 201
+        return {'id':user.id, 'name': user.name, 'password':user.password_hash, 'points': user.points, 'address': user.address, 'event': user.event_id}, 201
+
+    except InvalidInput as error:
+        return(*error.args, 400)
+
+    except InvalidKey as error:
+        return(*error.args, 400)
 
     except exc.IntegrityError:
             return {'msg': 'This email already registered!'}, 409
