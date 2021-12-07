@@ -16,5 +16,7 @@ def init_app(app: Flask):
     from app.models.sponsors_model import SponsorModel
     from app.models.event_model import EventsModel
     from app.models.admin_model import AdminModel
+    from app.models.avatar_model import AvatarModel
+    
 
     app.db = db
