@@ -12,7 +12,7 @@ class UserModel(db.Model):
     email: str
     points: int
     address_id: int
-    # event_id: int
+    event_id: int
 
     __tablename__ = "users"
 
@@ -23,10 +23,10 @@ class UserModel(db.Model):
     points = Column(Integer, nullable=False, default=0)
     avatar = Column(String, nullable=False)
     address_id = Column(Integer, ForeignKey("user_address.id"))
-    # event_id = Column(Integer, ForeignKey("events.id"))
+    event_id = Column(Integer, ForeignKey("events.id"))
     # token = Column(String, nullable=True)
 
-    # events = relationship("EventsModel", backref=backref("users"), uselist=False)
+    events = relationship("EventsModel", backref=backref("users"), uselist=False)
 
     @property
     def password(self):

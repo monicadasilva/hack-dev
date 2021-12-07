@@ -9,14 +9,14 @@ class GroupModel(db.Model):
     __tablename__ = 'group'
 
     id: int
-    #event_id: str
-    #participants_id: str
+    event_id: str
+    participants_id: str
     name: str
     mentor_name: str
 
     id = Column(Integer, primary_key=True)
-    #event_id = Column(Integer, ForeignKey('event.id') ,nullable=False )
-    #participants_id = Column(Integer, ForeignKey('users.id') ,nullable=False)
+    event_id = Column(Integer, ForeignKey('events.id') ,nullable=False )
+    participants_id = Column(Integer, ForeignKey('users.id') ,nullable=False)
     name = Column(String(100))
     mentor_name = Column(String(100))
 

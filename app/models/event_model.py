@@ -4,7 +4,7 @@ from dataclasses import dataclass
 
 
 @dataclass
-class SkillsModel(db.Model):
+class EventsModel(db.Model):
     id: int
     name: str
     date: str
@@ -12,7 +12,7 @@ class SkillsModel(db.Model):
     skills_id: int
     sponsors_id: int
 
-    __tablename__ = "skills"
+    __tablename__ = "events"
 
     id = Column(Integer, primary_key=True)
     name = Column(String(100), nullable=False)
