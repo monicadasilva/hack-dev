@@ -8,13 +8,13 @@ class FeedbackModel(db.Model):
 
 
     id: int
-    #event_id: int
-    #user_id: int
+    event_id: int
+    user_id: int
     feedback: str
 
     __tablename__ = 'feedbacks'
     
     id = Column(Integer, primary_key=True)
-    #event_id = Column(Integer, ForeignKey('event.id'), nullable=False)
-    #user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
+    event_id = Column(Integer, ForeignKey('events.id'), nullable=False)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
     feedback = Column(Text)

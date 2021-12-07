@@ -14,4 +14,4 @@ class SponsorModel(db.Model):
     id = Column(Integer, primary_key=True)
     name = Column(String(100), nullable=False)
 
-    # events = relationship("EventsModel", backref=backref("sponsors", uselist=False))
+    events = relationship("EventsModel", backref=backref("sponsors", uselist=False))
