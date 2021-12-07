@@ -14,5 +14,6 @@ def init_app(app: Flask):
     from app.models.feedback_model import FeedbackModel
     from app.models.users_model import UserModel
     from app.models.sponsors_model import SponsorModel
+    from app.models.admin_model import AdminModel
 
     app.db = db
