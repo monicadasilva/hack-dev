@@ -11,20 +11,22 @@ class UserModel(db.Model):
     name: str
     email: str
     points: int
+    avatar_id: int
     address_id: int
     event_id: int
 
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True)
-    name = Column(String(100), nullable=False, unique=True)
+    name = Column(String(100), nullable=False)
     email = Column(String, nullable=False, unique=True)
     password_hash = Column(String, nullable=True)
     points = Column(Integer, nullable=False, default=0)
-    avatar = Column(String, nullable=False)
+    avatar_id = Column(Integer, ForeignKey("avatars.id"))
     address_id = Column(Integer, ForeignKey("user_address.id"))
     event_id = Column(Integer, ForeignKey("events.id"))
-    # token = Column(String, nullable=True)
+
+    avatar = db.relationship('AvatarModel', backref=backref('users'), uselist=False)
 
     events = relationship("EventsModel", backref=backref("users"), uselist=False)
 
