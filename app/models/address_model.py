@@ -4,6 +4,7 @@ from sqlalchemy.sql.schema import ForeignKey
 from app.configs.database import db
 from dataclasses import dataclass
 
+
 @dataclass
 class AddressModel(db.Model):
     id: int
@@ -23,7 +24,7 @@ class AddressModel(db.Model):
     city = Column(String, nullable=False)
     state = Column(String, nullable=False)
     zip_code = Column(String, nullable=False)
-    
-    # user_id = Column(Integer, ForeignKey('users.id'), nullable=False, unique=True)
-    
-    # user = db.relationship('UserModel', backref('adress'), uselist=False)
+
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False, unique=True)
+
+    user = db.relationship('UserModel', backref=backref('adress', uselist=False), uselist=False)
