@@ -4,6 +4,7 @@ from app.controllers import verify
 from app.exceptions.exceptions import InvalidInput, InvalidKey
 from app.models.address_model import AddressModel
 from app.models.avatar_model import AvatarModel
+from app.models.event_model import EventsModel
 from app.models.users_model import UserModel
 from flask_jwt_extended import create_access_token
 from sqlalchemy import exc
@@ -144,3 +145,28 @@ def update_user(id):
 
     except NotFound:
         return {"error": "User not found"}, 404
+
+
+@jwt_required()
+def signin_event(id):
+    session = current_app.db.session
+    data = request.get_json()
+    name = data['name']
+    
+    try:
+        event = EventsModel.query.filter_by(name=name).one()
+        
+        if event == None:
+            raise NotFound()
+        
+        UserModel.query.filter_by(id=id).update({'event_id': event.id})
+        
+        
+        event = EventsModel.query.get(id)
+        
+        session.commit()
+        
+        return {'msg': f'Successfully joined the event: {event.name}'}, 200       
+    
+    except NotFound:
+        return {"error": "Event not found"}, 404
