@@ -95,7 +95,7 @@ def create_prize():
         return(*error.args, 400)
 
 
-# @jwt_required()
+@jwt_required()
 def update_event(id):
     session = current_app.db.session
     data = request.get_json()
