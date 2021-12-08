@@ -19,6 +19,7 @@ class EventsModel(db.Model):
     name = Column(String(100), nullable=False)
     date = Column(DateTime, nullable=False)
     duration = Column(DateTime, nullable=False)
+    description = Column(String, nullable=False)
     skills_id = Column(
         Integer,
         ForeignKey("skills.id"),
