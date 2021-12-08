@@ -11,7 +11,7 @@ from flask_jwt_extended import create_access_token
 from sqlalchemy import exc
 from werkzeug.exceptions import NotFound
 from flask_jwt_extended import jwt_required
-
+from app.models.prize_model import PrizeModel
 
 def login():
     try:
@@ -188,3 +188,11 @@ def signup_event(id):
     
     except NotFound:
         return {"error": "Event not found"}, 404
+
+
+@jwt_required()
+def view_prizes():
+    
+    prize = PrizeModel.query.all()
+
+    return jsonify({"data": prize})

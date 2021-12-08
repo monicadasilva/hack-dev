@@ -1,5 +1,5 @@
 from flask import Blueprint
-from app.controllers.user_controller import create_user, delete_user, login, signup_event, update_avatar, user_info, update_address, update_user
+from app.controllers.user_controller import create_user, delete_user, login, signup_event, update_avatar, user_info, update_address, update_user, view_prizes
 from flask_jwt_extended import jwt_required
 
 
@@ -14,6 +14,6 @@ bp.delete("/<int:id>")(delete_user)
 bp.patch("/address/update/<int:id>")(update_address)
 bp.patch("/<int:id>")(update_user)
 bp.patch("/event/sigin/<int:id>")(signup_event)
-
+bp.get("/prizes")(view_prizes)
 
 
