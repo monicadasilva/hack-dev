@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, DateTime
+from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Boolean
 from app.configs.database import db
 from dataclasses import dataclass
 from sqlalchemy.orm import backref
@@ -12,6 +12,7 @@ class EventsModel(db.Model):
     duration: str
     skills_id: int
     sponsors_id: int
+    pending: bool
 
     __tablename__ = "events"
 
@@ -30,6 +31,6 @@ class EventsModel(db.Model):
         ForeignKey("sponsors.id"),
         nullable=False
     )
-
+    pending = Column(Boolean, nullable=False)
     skill = db.relationship("SkillsModel", backref=backref("event"), uselist=False)
     sponsor = db.relationship('SponsorModel', backref=backref('event'), uselist=False)
