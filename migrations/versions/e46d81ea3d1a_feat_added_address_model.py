@@ -22,7 +22,7 @@ def upgrade():
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('street', sa.String(length=100), nullable=False),
     sa.Column('number', sa.Integer(), nullable=False),
-    sa.Column('hood', sa.Integer(), nullable=False),
+    sa.Column('district', sa.String(), nullable=False),
     sa.Column('city', sa.String(), nullable=False),
     sa.Column('state', sa.String(), nullable=False),
     sa.Column('zip_code', sa.String(), nullable=False),
