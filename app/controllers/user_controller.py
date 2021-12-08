@@ -1,7 +1,8 @@
 from flask import request, current_app, jsonify
+from sqlalchemy.util.langhelpers import NoneType
 from werkzeug.utils import secure_filename
 from app.controllers import verify
-from app.exceptions.exceptions import InvalidInput, InvalidKey
+from app.exceptions.exceptions import AddressError, InvalidInput, InvalidKey
 from app.models.address_model import AddressModel
 from app.models.avatar_model import AvatarModel
 from app.models.users_model import UserModel
@@ -78,22 +79,32 @@ def user_info(id):
         user = UserModel.query.filter_by(id=id).first_or_404()
 
         session.commit()
-        print(user.address)
+
+        if user.address == None:
+            raise AddressError
 
         return jsonify({
             "id": user.id,
             "name": user.name,
             "email": user.email,
-            #"street": user['address'].street,
-            #"number": user.address.number,
-            #"district": user.address.district,
-            #"city": user.address.city,
-            #"state": user.address.state,
-            #"zip_code": user.address.zip_code
+            "address": {
+                "street": user.address.street,
+                "number": user.address.number,
+                "district": user.address.district,
+                "city": user.address.city,
+                "state": user.address.state,
+                "zip_code": user.address.zip_code
+            }
         }), 200
         
     except NotFound:
         return {"error": "User not found"}, 404
+    except AddressError:
+         return jsonify({
+            "id": user.id,
+            "name": user.name,
+            "email": user.email
+        }), 200
 
 @jwt_required()
 def delete_user(id):
