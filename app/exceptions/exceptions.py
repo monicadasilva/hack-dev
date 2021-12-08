@@ -3,3 +3,6 @@ class InvalidInput(Exception):
 
 class InvalidKey(Exception):
     ...
+
+class AddressError(Exception):
+    ...
