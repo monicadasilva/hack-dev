@@ -78,11 +78,18 @@ def user_info(id):
         user = UserModel.query.filter_by(id=id).first_or_404()
 
         session.commit()
+        print(user.address)
 
         return jsonify({
             "id": user.id,
             "name": user.name,
             "email": user.email,
+            #"street": user['address'].street,
+            #"number": user.address.number,
+            #"district": user.address.district,
+            #"city": user.address.city,
+            #"state": user.address.state,
+            #"zip_code": user.address.zip_code
         }), 200
     except NotFound:
         return {"error": "User not found"}, 404
