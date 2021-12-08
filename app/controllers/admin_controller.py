@@ -11,6 +11,31 @@ from werkzeug.exceptions import NotFound
 from flask_jwt_extended import jwt_required
 
 
+def login_admin():
+    try:
+        data = request.get_json()
+
+        admin: AdminModel = AdminModel.query.filter_by(email=data['email']).first_or_404()
+
+        if admin.verify_password(data["password"]):
+            token = create_access_token(admin)
+            return jsonify({
+                "token": token,
+                "admin": {
+                    "id": admin.id,
+                    "name": admin.name,
+                    "email": admin.name
+                }
+            }), 200
+        else:
+            return jsonify({"msg": "Incorrect password"}), 400
+
+    except KeyError as e:
+        return jsonify({"expected_key": e.args}), 400
+    except NotFound:
+        return jsonify({"error": "Admin not found"}), 404
+
+
 def create_admin():
     session = current_app.db.session
     #name - email - password
@@ -22,6 +47,6 @@ def create_admin():
         session.add(admin)
         session.commit()
 
-        return {"id": admin.id, "name": admin.name, "email": admin.email, "password": admin.password_hash}, 201
+        return {"id": admin.id, "name": admin.name, "email": admin.email}, 201
     except exc.IntegrityError:
         return {'msg': 'This email already registered!'}, 409
