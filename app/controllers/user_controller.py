@@ -148,7 +148,7 @@ def update_user(id):
 
 
 @jwt_required()
-def signin_event(id):
+def signup_event(id):
     session = current_app.db.session
     data = request.get_json()
     name = data['name']
@@ -159,14 +159,14 @@ def signin_event(id):
         if event == None:
             raise NotFound()
         
-        UserModel.query.filter_by(id=id).update({'event_id': event.id})
+        user = UserModel.query.filter_by(id=id).update({'event_id': event.id})
         
         
         event = EventsModel.query.get(id)
         
         session.commit()
         
-        return {'msg': f'Successfully joined the event: {event.name}'}, 200       
+        return {'id': event.id, 'name': event.name, 'date': event.date, 'duration': event.duration, 'description': event.description }, 200       
     
     except NotFound:
         return {"error": "Event not found"}, 404
