@@ -1,3 +1,5 @@
+from sqlalchemy.orm import backref
+from sqlalchemy.sql.schema import ForeignKey
 from app.configs.database import db
 from sqlalchemy import Column, Integer, String
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -18,9 +20,10 @@ class AdminModel(db.Model):
     name = Column(String(100), nullable=False, unique=True)
     email = Column(String, nullable=False, unique=True)
     password = Column(String, nullable=True)
-    avatar = Column(String, nullable=False)
-    # token = Column(String, nullable=True)
-   
+    avatar_id = Column(Integer, ForeignKey("avatars.id"))
+
+    avatar = db.relationship('AvatarModel', backref=backref('admin'), uselist=False)
+
 
     @property
     def password(self):
