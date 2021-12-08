@@ -11,7 +11,6 @@ class AdminModel(db.Model):
     id: int
     name: str
     email: str
-    password: str
 
 
     __tablename__ = "admin"
@@ -19,19 +18,21 @@ class AdminModel(db.Model):
     id = Column(Integer, primary_key=True)
     name = Column(String(100), nullable=False, unique=True)
     email = Column(String, nullable=False, unique=True)
-    password = Column(String, nullable=True)
+    password_hash = Column(String, nullable=True)
     avatar_id = Column(Integer, ForeignKey("avatars.id"))
 
     avatar = db.relationship('AvatarModel', backref=backref('admin'), uselist=False)
 
+
+   
 
     @property
     def password(self):
         raise AttributeError("Password not found!")
 
     @password.setter
-    def password_to_hash(self, password):
-        self.password = generate_password_hash(password)
+    def password(self, password):
+        self.password_hash = generate_password_hash(password)
 
     def verify_password(self, password):
-        return check_password_hash(self.password, password)
+        return check_password_hash(self.password_hash, password)
