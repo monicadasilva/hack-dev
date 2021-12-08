@@ -50,3 +50,20 @@ def create_admin():
         return {"id": admin.id, "name": admin.name, "email": admin.email}, 201
     except exc.IntegrityError:
         return {'msg': 'This email already registered!'}, 409
+
+
+@jwt_required()
+def update_avatar(id):
+    session = current_app.db.session
+    user_avatar = request.files['avatar']
+
+    filename = secure_filename(user_avatar.filename)
+
+    img = AvatarModel(data=user_avatar.read(), name=filename)
+    session.add(img)
+    session.commit()
+
+    AdminModel.query.filter_by(id=id).update({'avatar_id': img.id})
+    session.commit()
+
+    return '', 204
