@@ -12,3 +12,6 @@ bp.patch("/update/<int:id>")(update_avatar)
 bp.get("/<int:id>")(user_info)
 bp.delete("/<int:id>")(delete_user)
 bp.patch("/address/update/<int:id>")(update_address)
+
+
+
