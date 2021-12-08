@@ -1,4 +1,3 @@
-from os import name
 from flask import request, current_app, jsonify
 from werkzeug.utils import secure_filename
 from app.controllers import verify
@@ -8,6 +7,7 @@ from app.models.users_model import UserModel
 from flask_jwt_extended import create_access_token
 from sqlalchemy import exc
 from werkzeug.exceptions import NotFound
+from flask_jwt_extended import jwt_required
 
 
 def login():
@@ -85,7 +85,7 @@ def user_info(id):
     except NotFound:
         return {"error": "User not found"}, 404
 
-
+@jwt_required()
 def delete_user(id):
     try:
         session = current_app.db.session
