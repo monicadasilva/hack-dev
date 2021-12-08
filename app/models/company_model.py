@@ -2,9 +2,16 @@ from app.configs.database import db
 from sqlalchemy import Column, Integer, String, ForeignKey, LargeBinary
 from sqlalchemy.orm import relationship
 from werkzeug.security import generate_password_hash, check_password_hash
+from dataclasses import dataclass
 
 
+@dataclass
 class CompanyModel(db.Model):
+    id: int
+    name: str
+    email: str
+    avatar_id: int
+    mkt_material: str
 
     __tablename__ = "company"
 
