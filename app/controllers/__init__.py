@@ -19,3 +19,15 @@ def verify(data):
         raise InvalidKey({'error': 'Only name, email and password keys are allowed'})
 
     return ''
+
+
+def verify_prizes(data):
+
+    exepected_keys = ['name', 'price', 'qtd']
+    data_keys = data.keys()
+    wrong_keys = list(filter(lambda x: x not in data_keys, exepected_keys))
+
+    if wrong_keys:
+        raise InvalidKey({'error': 'Only name, price and qtd keys are allowed'})
+
+    return ''
