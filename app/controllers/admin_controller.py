@@ -4,6 +4,7 @@ from app.controllers import verify, verify_prizes
 from app.exceptions.exceptions import InvalidInput, InvalidKey
 from app.models.admin_model import AdminModel
 from app.models.avatar_model import AvatarModel
+from app.models.event_model import EventsModel
 from app.models.prize_model import PrizeModel
 from flask_jwt_extended import create_access_token
 from sqlalchemy import exc
@@ -76,7 +77,7 @@ def update_avatar(id):
     return '', 204
 
 
-# @jwt_required()
+@jwt_required()
 def create_prize():
 
     try:
@@ -92,4 +93,15 @@ def create_prize():
 
     except InvalidKey as error:
         return(*error.args, 400)
+
+
+# @jwt_required()
+def update_event(id):
+    session = current_app.db.session
+    data = request.get_json()
+
+    #update only pading state 
+    EventsModel.query.filter_by(id=id).update(data)
+    session.commit()
     
+    return '', 204
