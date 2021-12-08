@@ -9,7 +9,6 @@ class AdminModel(db.Model):
     id: int
     name: str
     email: str
-    password: str
 
 
     __tablename__ = "admin"
@@ -17,7 +16,7 @@ class AdminModel(db.Model):
     id = Column(Integer, primary_key=True)
     name = Column(String(100), nullable=False, unique=True)
     email = Column(String, nullable=False, unique=True)
-    password = Column(String, nullable=True)
+    password_hash = Column(String, nullable=True)
     avatar = Column(String)
     # token = Column(String, nullable=True)
    
