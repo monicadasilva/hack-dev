@@ -51,6 +51,12 @@ def create_user():
 
         return {'id': user.id, 'name': user.name, 'email': user.email, 'password': user.password_hash, 'points': user.points}, 201
 
+    except InvalidInput as error:
+            return(*error.args, 400)
+
+    except InvalidKey as error:
+        return(*error.args, 400)
+
     except exc.IntegrityError:
         return {'msg': 'This email already registered!'}, 409
 
