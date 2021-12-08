@@ -1,6 +1,6 @@
 from flask import Blueprint
 from app.controllers.user_controller import create_user, delete_user, login, update_avatar, user_info
-from flask_jwt_extended import jwt_required
+
 
 bp = Blueprint("bp_user", __name__, url_prefix="/users")
 

@@ -18,7 +18,7 @@ class AdminModel(db.Model):
     name = Column(String(100), nullable=False, unique=True)
     email = Column(String, nullable=False, unique=True)
     password = Column(String, nullable=True)
-    avatar = Column(String, nullable=False)
+    avatar = Column(String)
     # token = Column(String, nullable=True)
    
 
@@ -27,8 +27,8 @@ class AdminModel(db.Model):
         raise AttributeError("Password not found!")
 
     @password.setter
-    def password_to_hash(self, password):
-        self.password = generate_password_hash(password)
+    def password(self, password):
+        self.password_hash = generate_password_hash(password)
 
     def verify_password(self, password):
-        return check_password_hash(self.password, password)
+        return check_password_hash(self.password_hash, password)
