@@ -144,6 +144,3 @@ def update_user(id):
 
     except NotFound:
         return {"error": "User not found"}, 404
-
-
-
