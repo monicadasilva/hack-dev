@@ -69,7 +69,7 @@ def update_avatar(id):
 
     return '', 204
 
-
+@jwt_required()
 def user_info(id):
     try:
         session = current_app.db.session
