@@ -5,6 +5,7 @@ from app.controllers import verify
 from app.exceptions.exceptions import AddressError, InvalidInput, InvalidKey
 from app.models.address_model import AddressModel
 from app.models.avatar_model import AvatarModel
+from app.models.event_model import EventsModel
 from app.models.users_model import UserModel
 from flask_jwt_extended import create_access_token
 from sqlalchemy import exc
@@ -51,6 +52,12 @@ def create_user():
         session.commit()
 
         return {'id': user.id, 'name': user.name, 'email': user.email, 'password': user.password_hash, 'points': user.points}, 201
+
+    except InvalidInput as error:
+            return(*error.args, 400)
+
+    except InvalidKey as error:
+        return(*error.args, 400)
 
     except exc.IntegrityError:
         return {'msg': 'This email already registered!'}, 409
@@ -158,4 +165,26 @@ def update_user(id):
         return {"error": "User not found"}, 404
 
 
-
+@jwt_required()
+def signin_event(id):
+    session = current_app.db.session
+    data = request.get_json()
+    name = data['name']
+    
+    try:
+        event = EventsModel.query.filter_by(name=name).one()
+        
+        if event == None:
+            raise NotFound()
+        
+        UserModel.query.filter_by(id=id).update({'event_id': event.id})
+        
+        
+        event = EventsModel.query.get(id)
+        
+        session.commit()
+        
+        return {'msg': f'Successfully joined the event: {event.name}'}, 200       
+    
+    except NotFound:
+        return {"error": "Event not found"}, 404
