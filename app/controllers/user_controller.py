@@ -91,6 +91,7 @@ def user_info(id):
             #"state": user.address.state,
             #"zip_code": user.address.zip_code
         }), 200
+        
     except NotFound:
         return {"error": "User not found"}, 404
 
@@ -121,3 +122,29 @@ def update_address(id):
     session.commit()
     
     return {'msg': 'Address registered!'}
+
+@jwt_required()
+def update_user(id):
+
+    try:
+        session = current_app.db.session
+        data = request.get_json()
+        
+        user = UserModel.query.get(id)
+        
+        if not user:
+            raise NotFound()
+
+        for key, value in data.items():
+            setattr(user, key, value)
+
+        session.add(user)
+        session.commit()
+
+        return jsonify(user)
+
+    except NotFound:
+        return {"error": "User not found"}, 404
+
+
+
