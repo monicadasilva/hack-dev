@@ -88,8 +88,7 @@ def create_event():
             "date": new_event.date,
             "duration": new_event.duration,
             "pending": new_event.pending,
-            "skill": new_event.skill,
-            "sponsor": new_event.sponsor
+            "skill": new_event.skills,
         }), 201
 
     except InvalidKey as e:

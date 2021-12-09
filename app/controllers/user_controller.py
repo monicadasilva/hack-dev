@@ -1,8 +1,8 @@
-from flask import request, current_app, jsonify
+from flask import request, current_app, jsonify, send_file
 from sqlalchemy.util.langhelpers import NoneType
 from werkzeug.utils import secure_filename
 from app.controllers import verify
-from app.exceptions.exceptions import AddressError, InvalidInput, InvalidKey
+from app.exceptions.exceptions import AddressError, AvatarError, InvalidInput, InvalidKey
 from app.models.address_model import AddressModel
 from app.models.avatar_model import AvatarModel
 from app.models.event_model import EventsModel
@@ -12,6 +12,7 @@ from sqlalchemy import exc
 from werkzeug.exceptions import NotFound
 from flask_jwt_extended import jwt_required
 from app.models.prize_model import PrizeModel
+from io import BytesIO
 
 def login():
     try:
@@ -51,7 +52,7 @@ def create_user():
         session.add(user)
         session.commit()
 
-        return {'id': user.id, 'name': user.name, 'email': user.email, 'password': user.password_hash, 'points': user.points}, 201
+        return {'id': user.id, 'name': user.name, 'email': user.email, 'points': user.points}, 201
 
     except InvalidInput as error:
             return(*error.args, 400)
@@ -68,8 +69,16 @@ def update_avatar(id):
     session = current_app.db.session
     user_avatar = request.files['avatar']
 
+    user = UserModel.query.filter_by(id=id).first_or_404()
+    
+    
+    if user.avatar_id != None:
+        old_avatar = AvatarModel.query.get(user.avatar_id)
+        session.delete(old_avatar)
+        session.commit()
+        
+    
     filename = secure_filename(user_avatar.filename)
-
     img = AvatarModel(data=user_avatar.read(), name=filename)
     session.add(img)
     session.commit()
@@ -84,12 +93,13 @@ def user_info(id):
     try:
         session = current_app.db.session
         user = UserModel.query.filter_by(id=id).first_or_404()
-
+        
         session.commit()
 
         if user.address == None:
             raise AddressError
 
+    
         return jsonify({
             "id": user.id,
             "name": user.name,
@@ -101,7 +111,8 @@ def user_info(id):
                 "city": user.address.city,
                 "state": user.address.state,
                 "zip_code": user.address.zip_code
-            }
+            },
+            "event": user.events
         }), 200
         
     except NotFound:
@@ -110,7 +121,8 @@ def user_info(id):
          return jsonify({
             "id": user.id,
             "name": user.name,
-            "email": user.email
+            "email": user.email,
+            "event": user.events
         }), 200
 
 @jwt_required()
@@ -148,10 +160,7 @@ def update_user(id):
         session = current_app.db.session
         data = request.get_json()
         
-        user = UserModel.query.get(id)
-        
-        if not user:
-            raise NotFound()
+        user = UserModel.query.get_or_404(id)
 
         for key, value in data.items():
             setattr(user, key, value)
@@ -159,7 +168,7 @@ def update_user(id):
         session.add(user)
         session.commit()
 
-        return jsonify(user)
+        return {'name': user.name, 'email': user.email}
 
     except NotFound:
         return {"error": "User not found"}, 404
@@ -172,15 +181,10 @@ def signup_event(id):
     name = data['name']
     
     try:
-        event = EventsModel.query.filter_by(name=name).one()
+        event = EventsModel.query.filter_by(name=name).first_or_404()
         
-        if event == None:
-            raise NotFound()
-        
-        user = UserModel.query.filter_by(id=id).update({'event_id': event.id})
-        
-        
-        event = EventsModel.query.get(id)
+        UserModel.query.filter_by(id=id).update({'event_id': event.id})
+ 
         
         session.commit()
         
@@ -196,3 +200,16 @@ def view_prizes():
     prize = PrizeModel.query.all()
 
     return jsonify({"data": prize})
+
+@jwt_required()
+def user_avatar(id):
+    try:    
+        avatar = UserModel.query.filter_by(id=id).first_or_404()
+        file_data = AvatarModel.query.filter_by(id=avatar.avatar_id).one()
+        
+        return send_file(BytesIO(file_data.data), attachment_filename=file_data.name, as_attachment=False)
+
+    except NotFound:
+        return {"error": "User not found"}, 404
+    except exc.NoResultFound:
+        return {"error": "Avatar not found"}, 404
