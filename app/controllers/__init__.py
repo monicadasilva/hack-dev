@@ -23,12 +23,12 @@ def verify(data):
 
 def verify_prizes(data):
 
-    exepected_keys = ['name', 'price', 'qtd']
+    exepected_keys = ['name', 'price', 'amount']
     data_keys = data.keys()
     wrong_keys = list(filter(lambda x: x not in data_keys, exepected_keys))
 
     if wrong_keys:
-        raise InvalidKey({'error': 'Only name, price and qtd keys are allowed'})
+        raise InvalidKey({'error': 'Only name, price and amount keys are allowed'})
 
     return ''
 
@@ -39,8 +39,7 @@ def verify_event(data: dict):
         "description": str,
         "date": str,
         "duration": str,
-        "skills_id": int,
-        "sponsors_id": int
+        "skills": str,
     }
     data_keys = data.keys()
     not_found_key = list(filter(lambda x: x not in data_keys, expected_keys))

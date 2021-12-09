@@ -1,4 +1,5 @@
-from flask import request, current_app, jsonify
+from io import BytesIO
+from flask import request, current_app, jsonify,send_file
 from werkzeug.utils import secure_filename
 from app.controllers import verify, verify_prizes
 from app.exceptions.exceptions import InvalidInput, InvalidKey
@@ -65,8 +66,16 @@ def update_avatar(id):
     session = current_app.db.session
     user_avatar = request.files['avatar']
 
+    user = AdminModel.query.filter_by(id=id).first_or_404()
+    
+    
+    if user.avatar_id != None:
+        old_avatar = AvatarModel.query.get(user.avatar_id)
+        session.delete(old_avatar)
+        session.commit()
+        
+    
     filename = secure_filename(user_avatar.filename)
-
     img = AvatarModel(data=user_avatar.read(), name=filename)
     session.add(img)
     session.commit()
@@ -89,8 +98,10 @@ def create_prize():
         session.add(prize)
         session.commit()
         
-        return {"id": prize.id, "name": prize.name, "price": prize.price, "amount": prize.qtd}, 201
+        return {"id": prize.id, "name": prize.name, "price": prize.price, "amount": prize.amount}, 201
 
+    except exc.IntegrityError:
+        return {"error": "Prize already exists."}, 409
     except InvalidKey as error:
         return(*error.args, 400)
 
@@ -105,3 +116,16 @@ def update_event(id):
     session.commit()
     
     return '', 204
+
+@jwt_required()
+def admin_avatar(id):
+    try:    
+        avatar = AdminModel.query.filter_by(id=id).first_or_404()
+        file_data = AvatarModel.query.filter_by(id=avatar.avatar_id).one()
+        
+        return send_file(BytesIO(file_data.data), attachment_filename=file_data.name, as_attachment=False)
+
+    except NotFound:
+        return {"error": "User not found"}, 404
+    except exc.NoResultFound:
+        return {"error": "Avatar not found"}, 404

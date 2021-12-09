@@ -6,3 +6,6 @@ class InvalidKey(Exception):
 
 class AddressError(Exception):
     ...
+
+class AvatarError(Exception):
+    ...

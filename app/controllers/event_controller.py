@@ -25,6 +25,5 @@ def read_events():
         "date": event.date,
         "pending": event.pending,
         "duration": event.duration,
-        "skills": event.skill,
-        "sponsor": event.sponsor
+        "skills": event.skills,
     } for event in events]), 200
