@@ -1,10 +1,12 @@
 from flask import request, current_app, jsonify
-from app.controllers import verify
+from app.controllers import verify, verify_event
 from app.exceptions.exceptions import InvalidInput, InvalidKey
 from sqlalchemy.exc import IntegrityError
 from app.models.company_model import CompanyModel
-from flask_jwt_extended import create_access_token
+from flask_jwt_extended import create_access_token, jwt_required, decode_token
 from werkzeug.exceptions import NotFound
+
+from app.models.event_model import EventsModel
 
 
 def create_company():
@@ -57,3 +59,41 @@ def login_company():
         return jsonify({"expected_key": e.args}), 400
     except NotFound:
         return jsonify({"error": "Company not found"}), 404
+
+
+@jwt_required()
+def create_event():
+    session = current_app.db.session
+    data = request.get_json()
+    try:
+        verify_event(data)
+        token = request.headers["Authorization"][7:]
+        data["pending"] = True
+
+        token_company = decode_token(token)["sub"]
+
+        company = CompanyModel.query.filter_by(email=token_company["email"]).first()
+
+        if not company:
+            return {"msg": "only registered companies can create events"}, 401
+
+        new_event: EventsModel = EventsModel(**data)
+        session.add(new_event)
+        session.commit()
+
+        return jsonify({
+            "id": new_event.id,
+            "name": new_event.name,
+            "description": new_event.description,
+            "date": new_event.date,
+            "duration": new_event.duration,
+            "pending": new_event.pending,
+            "skill": new_event.skill,
+            "sponsor": new_event.sponsor
+        }), 201
+
+    except InvalidKey as e:
+        return jsonify(*e.args), 400
+
+    except InvalidInput as e:
+        return jsonify(*e.args), 400
