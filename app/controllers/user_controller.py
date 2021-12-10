@@ -139,6 +139,42 @@ def delete_user(id):
         return {"error": "User not found"}, 404
 
 
+
+@jwt_required()
+def create_address(id):
+
+    try:
+        session = current_app.db.session
+        data = request.get_json()
+
+        user: UserModel = UserModel.query.get(id)
+        addrres_local = AddressModel(**data)
+
+        if not user:
+            raise NotFound()
+        
+        session.add(addrres_local)
+        session.commit()
+
+        user.address_id = addrres_local.id
+        
+        session.add(user)
+        session.commit()
+        
+        return jsonify(addrres_local)
+
+    except NotFound:
+        return jsonify({"error": "User not found"}), 404
+
+
+    except exc.IntegrityError:
+        print("*"*50)
+        print(data.keys())
+        print("*"*50)
+        return jsonify({"expected_keys":["street", "number", "district", "city", "state", "zip_code"], "received": [key for key in data.keys()]}), 409
+
+
+
 @jwt_required()
 def update_address(id):
     session = current_app.db.session
