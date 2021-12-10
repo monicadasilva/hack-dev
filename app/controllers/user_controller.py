@@ -96,34 +96,17 @@ def user_info(id):
         
         session.commit()
 
-        if user.address == None:
-            raise AddressError
-
-    
         return jsonify({
             "id": user.id,
             "name": user.name,
             "email": user.email,
-            "address": {
-                "street": user.address.street,
-                "number": user.address.number,
-                "district": user.address.district,
-                "city": user.address.city,
-                "state": user.address.state,
-                "zip_code": user.address.zip_code
-            },
+            "address": user.address,
             "event": user.events
         }), 200
         
     except NotFound:
         return {"error": "User not found"}, 404
-    except AddressError:
-         return jsonify({
-            "id": user.id,
-            "name": user.name,
-            "email": user.email,
-            "event": user.events
-        }), 200
+    
 
 @jwt_required()
 def delete_user(id):
