@@ -111,11 +111,12 @@ def update_event(id):
     session = current_app.db.session
     data = request.get_json()
 
-    #update only pading state 
+    #update only pending state 
     EventsModel.query.filter_by(id=id).update(data)
     session.commit()
     
     return '', 204
+
 
 @jwt_required()
 def admin_avatar(id):
@@ -129,3 +130,25 @@ def admin_avatar(id):
         return {"error": "User not found"}, 404
     except exc.NoResultFound:
         return {"error": "Avatar not found"}, 404
+
+
+@jwt_required()
+def get_one_admin(id):
+    try:
+        admin = AdminModel.query.filter_by(id=id).first_or_404()
+        return jsonify(admin)
+
+    except NotFound:
+        return {"error": "User not found"}, 404
+
+
+@jwt_required()
+def get_all_admin():
+    admins = AdminModel.query.all()
+
+    return jsonify([{
+        "id": admin.id,
+        "name": admin.name,
+        "email": admin.email,
+        "avatar_id": admin.avatar_id,
+    } for admin in admins]), 200
