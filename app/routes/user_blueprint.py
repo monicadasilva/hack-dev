@@ -1,5 +1,5 @@
 from flask import Blueprint
-from app.controllers.user_controller import create_address, create_group, create_user, delete_user, login, recuperate_password, signup_event, unsub_event, update_avatar, user_avatar, user_info, update_address, update_user, view_prizes
+from app.controllers.user_controller import authorize, create_address, create_group, create_user, delete_user, google_login, login, logout, recuperate_password, signup_event, unsub_event, update_avatar, user_avatar, user_info, update_address, update_user, view_prizes
 from flask_jwt_extended import jwt_required
 from flask_cors import CORS
 
@@ -22,3 +22,6 @@ bp.get("/avatar/<int:id>")(user_avatar)
 bp.post("/<int:id>/event/group")(create_group)
 bp.patch("/recuperate/password")(recuperate_password)
 bp.patch("/event/unsubscribe/<int:id>")(unsub_event)
+bp.get("/login/google")(google_login)
+bp.get("/authorize")(authorize)
+bp.get("/logout")(logout)

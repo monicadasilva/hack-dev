@@ -1,7 +1,4 @@
-from flask import request, current_app, jsonify, send_file
-from sqlalchemy.sql.elements import Null
-from sqlalchemy.sql.expression import null
-from sqlalchemy.util.langhelpers import NoneType
+from flask import request, current_app, jsonify, send_file, redirect, url_for, session
 from werkzeug.utils import secure_filename
 from app.controllers import generate_password, verify
 from app.exceptions.exceptions import AddressError, AvatarError, InvalidInput, InvalidKey
@@ -22,6 +19,8 @@ import smtplib
 from werkzeug.security import generate_password_hash
 import os
 from dotenv import load_dotenv
+from io import BytesIO
+from app.configs.google import oauth, google
 
 load_dotenv()
 
@@ -42,8 +41,7 @@ def login():
                     "name": user.name,
                     "email": user.email,
                     "points": user.points,
-                    "address": user.address,
-                    "event": user.events
+                    "address": user.address
                 }
             }), 200
         else:
@@ -317,3 +315,47 @@ def unsub_event(id):
 
     except NotFound:
         return {"error": "User not found."}, 404
+
+
+def google_login():
+    google = oauth.create_client('google') 
+    redirect_uri = url_for('bp_user.authorize', _external=True)
+    return google.authorize_redirect(redirect_uri)
+
+
+def authorize():
+    dbsession = current_app.db.session
+    
+    google = oauth.create_client('google')
+    token = google.authorize_access_token() 
+    resp = google.get('userinfo') 
+    user_info = resp.json()
+    user = oauth.google.userinfo()  
+    
+    user_data = {'name': user.name, 'email': user.email}
+    user_db = UserModel.query.filter_by(email=user.email).first()
+    
+    if user_db == None:
+        new_user = UserModel(**user_data)
+        dbsession.add(new_user)
+        dbsession.commit()
+        return jsonify({
+                "token": token,
+                "user": {
+                    "id": new_user.id,
+                    "name": new_user.name,
+                    "email": new_user.email,
+                    "points": new_user.points,
+                    "address": new_user.address
+                }
+            }), 200
+    
+    session['profile'] = user_info
+    session.permanent = True 
+    return redirect('/')
+
+
+def logout():
+    for key in list(session.keys()):
+        session.pop(key)
+    return redirect('/')
