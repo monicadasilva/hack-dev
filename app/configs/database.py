@@ -18,5 +18,6 @@ def init_app(app: Flask):
     from app.models.admin_model import AdminModel
     from app.models.avatar_model import AvatarModel
     from app.models.company_model import CompanyModel
+    from app.models.user_group_table import user_group
 
     app.db = db
