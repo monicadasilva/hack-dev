@@ -11,14 +11,12 @@ class GroupModel(db.Model):
     __tablename__ = 'group'
 
     id: int
-    name: str
     event_id: str
     event: dict
     users: list
 
     id = Column(Integer, primary_key=True)
-    name = Column(String(100))
     event_id = Column(Integer, ForeignKey('events.id'), nullable=False)
 
     event = relationship("EventsModel", backref=backref("group"), uselist=False)
-    users = relationship("UserModel", secondary=user_group, backref="group")
+    users = relationship("UserModel", secondary=user_group, backref=backref("group", uselist=False))

@@ -6,6 +6,7 @@ from app.exceptions.exceptions import AddressError, AvatarError, InvalidInput, I
 from app.models.address_model import AddressModel
 from app.models.avatar_model import AvatarModel
 from app.models.event_model import EventsModel
+from app.models.group_model import GroupModel
 from app.models.users_model import UserModel
 from flask_jwt_extended import create_access_token
 from sqlalchemy import exc
@@ -101,7 +102,8 @@ def user_info(id):
             "name": user.name,
             "email": user.email,
             "address": user.address,
-            "event": user.events
+            "event": user.events,
+            "group": user.group
         }), 200
 
     except NotFound:
@@ -225,3 +227,32 @@ def user_avatar(id):
         return {"error": "User not found"}, 404
     except exc.NoResultFound:
         return {"error": "Avatar not found"}, 404
+
+
+@jwt_required()
+def create_group(id):
+    try:
+        session = current_app.db.session
+        data = request.get_json()
+
+        user: UserModel = UserModel.query.filter_by(id=id).first_or_404()
+        group = GroupModel(event_id=user.event_id)
+        group.users.append(user)
+
+        if bool(data):
+            for username in data["users"]:
+                _user = UserModel.query.filter_by(name=username).first()
+                if not _user.event_id:
+                    raise InvalidInput
+                group.users.append(_user)
+
+        session.add(group)
+        session.commit()
+
+        return jsonify(group), 201
+    except exc.IntegrityError:
+        return jsonify({"msg": "you need to be registered for an event to create a group"}), 400
+    except NotFound:
+        return jsonify({"msg": "User not found"}), 404
+    except InvalidInput:
+        return jsonify({"msg": "one or more users are not registered for an event"}), 400
