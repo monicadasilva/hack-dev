@@ -1,7 +1,9 @@
 from flask import request, current_app, jsonify, send_file
+from sqlalchemy.sql.elements import Null
+from sqlalchemy.sql.expression import null
 from sqlalchemy.util.langhelpers import NoneType
 from werkzeug.utils import secure_filename
-from app.controllers import verify
+from app.controllers import generate_password, verify
 from app.exceptions.exceptions import AddressError, AvatarError, InvalidInput, InvalidKey
 from app.models.address_model import AddressModel
 from app.models.avatar_model import AvatarModel
@@ -13,7 +15,15 @@ from sqlalchemy import exc
 from werkzeug.exceptions import NotFound
 from flask_jwt_extended import jwt_required
 from app.models.prize_model import PrizeModel
-from io import BytesIO
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+import ssl
+import smtplib
+from werkzeug.security import generate_password_hash
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 def login():
@@ -256,3 +266,54 @@ def create_group(id):
         return jsonify({"msg": "User not found"}), 404
     except InvalidInput:
         return jsonify({"msg": "one or more users are not registered for an event"}), 400
+
+def recuperate_password():
+
+    try:
+        session = current_app.db.session
+        data = request.get_json()
+        new_password = generate_password(10)
+
+        emailto = data['email']
+
+        UserModel.query.filter_by(email=data['email']).first_or_404()
+
+        UserModel.query.filter_by(email=data['email']).update({'password_hash': generate_password_hash(new_password)})
+
+        session.commit()
+
+        email_send = MIMEMultipart()
+        password = os.environ.get(
+            'EMAIL_PASS')
+        message = f"Sua nova senha: {new_password}"
+        email_send["From"] = os.environ.get(
+            'EMAIL')
+        email_send["To"] = emailto
+        email_send["Subject"] = f"Sua nova senha gerada {new_password}"
+        email_send.attach(MIMEText(message, "plain"))
+        context = ssl.create_default_context()
+
+        with smtplib.SMTP_SSL("smtp.gmail.com", port=465, context=context) as server:
+            server.login(email_send["From"], password)
+            server.sendmail(email_send["From"], email_send["To"], email_send.as_string())
+        return {"message": "Email sent"}
+    except NotFound:
+        return {"error": "Email Not Found"}, 404
+
+
+@jwt_required()
+def unsub_event(id):
+    session = current_app.db.session
+
+    try:
+        user = UserModel.query.filter_by(id=id).first_or_404()
+        
+        if user.event_id:        
+            UserModel.query.filter_by(id=id).update({'event_id': None})
+            session.commit()
+            return {'msg': 'Successfully unsubscribed from event.'}, 200
+        
+        return {"error": "User not subscribed in any event."}, 404
+
+    except NotFound:
+        return {"error": "User not found."}, 404
