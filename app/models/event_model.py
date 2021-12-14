@@ -8,6 +8,7 @@ from sqlalchemy.orm import backref
 class EventsModel(db.Model):
     id: int
     name: str
+    description: str
     date: str
     duration: str
     skills: str
