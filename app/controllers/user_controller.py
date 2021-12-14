@@ -277,7 +277,6 @@ def recuperate_password():
             server.sendmail(email_send["From"], email_send["To"], email_send.as_string())
         return {"message": "Email sent"}
     except NotFound:
-<<<<<<< HEAD
         return {"error": "Email Not Found"}, 404
 
 
@@ -297,6 +296,3 @@ def unsub_event(id):
 
     except NotFound:
         return {"error": "User not found."}, 404
-=======
-        return {"error": "Email Not Found!"}, 404
->>>>>>> 9f6b6ca54c09727edad7fc2dae617c94360f71d8
