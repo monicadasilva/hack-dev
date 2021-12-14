@@ -1,7 +1,10 @@
 from flask import Blueprint
 from app.controllers.admin_controller import admin_avatar, create_admin, create_prize, get_all_admin, get_one_admin, login_admin, update_avatar, update_event
+from flask_cors import CORS
 
 bp_admin = Blueprint("bp_admin", __name__, url_prefix="/admin")
+
+CORS(bp_admin)
 
 bp_admin.post("/signup")(create_admin)
 bp_admin.post("/login")(login_admin)
