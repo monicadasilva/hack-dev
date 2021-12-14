@@ -1,7 +1,7 @@
 from flask import request, current_app, jsonify, send_file
 from sqlalchemy.util.langhelpers import NoneType
 from werkzeug.utils import secure_filename
-from app.controllers import verify
+from app.controllers import generate_password, verify
 from app.exceptions.exceptions import AddressError, AvatarError, InvalidInput, InvalidKey
 from app.models.address_model import AddressModel
 from app.models.avatar_model import AvatarModel
@@ -12,7 +12,15 @@ from sqlalchemy import exc
 from werkzeug.exceptions import NotFound
 from flask_jwt_extended import jwt_required
 from app.models.prize_model import PrizeModel
-from io import BytesIO
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+import ssl
+import smtplib
+from werkzeug.security import generate_password_hash
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 def login():
@@ -225,3 +233,39 @@ def user_avatar(id):
         return {"error": "User not found"}, 404
     except exc.NoResultFound:
         return {"error": "Avatar not found"}, 404
+
+
+def recuperate_password():
+
+    try:
+        session = current_app.db.session
+        data = request.get_json()
+        new_password = generate_password(10)
+
+        emailto = data['email']
+
+        UserModel.query.filter_by(email=data['email']).first_or_404()
+
+        UserModel.query.filter_by(email=data['email']).update({'password_hash': generate_password_hash(new_password)})
+
+        session.commit()
+
+        email_send = MIMEMultipart()
+        password = os.environ.get(
+        'EMAIL_PASS')
+        message = f"Sua nova senha: {new_password}"
+        email_send["From"] = os.environ.get(
+        'EMAIL')
+        email_send["To"] = emailto
+        email_send["Subject"] = f"Sua nova senha gerada {new_password}"
+        email_send.attach(MIMEText(message, "plain"))
+        context = ssl.create_default_context()
+
+        with smtplib.SMTP_SSL("smtp.gmail.com", port=465, context=context) as server:
+            server.login(email_send["From"], password)
+            server.sendmail(email_send["From"], email_send["To"], email_send.as_string())
+        return {"message": "Email sent"}
+    except NotFound:
+        return {"error": "Email Not Found"}, 404
+
+

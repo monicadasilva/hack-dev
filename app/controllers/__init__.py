@@ -1,4 +1,6 @@
 from app.exceptions.exceptions import InvalidInput, InvalidKey
+import string
+import secrets
 
 
 def verify(data):
@@ -69,3 +71,9 @@ def verify_event(data: dict):
             'invalid_values': invalid_values,
             'valid_values': valid_values
         })
+
+
+def generate_password(comprimento):
+    password_characters = string.ascii_letters
+    password = ''.join(secrets.choice(password_characters) for i in range(comprimento))
+    return password
