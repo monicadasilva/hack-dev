@@ -1,3 +1,4 @@
+from sqlalchemy.sql.elements import Null
 from app.configs.database import db
 from sqlalchemy import Column, Integer, String, ForeignKey
 from sqlalchemy.orm import backref, relationship
@@ -24,7 +25,7 @@ class UserModel(db.Model):
     points = Column(Integer, nullable=False, default=0)
     avatar_id = Column(Integer, ForeignKey("avatars.id"))
     address_id = Column(Integer, ForeignKey("user_address.id"))
-    event_id = Column(Integer, ForeignKey("events.id"))
+    event_id = Column(Integer, ForeignKey("events.id"), nullable=True)
 
     avatar = db.relationship('AvatarModel', backref=backref('users'), uselist=False)
 

@@ -1,4 +1,6 @@
 from flask import request, current_app, jsonify, send_file
+from sqlalchemy.sql.elements import Null
+from sqlalchemy.sql.expression import null
 from sqlalchemy.util.langhelpers import NoneType
 from werkzeug.utils import secure_filename
 from app.controllers import generate_password, verify
@@ -101,15 +103,24 @@ def user_info(id):
     try:
         session = current_app.db.session
         user = UserModel.query.filter_by(id=id).first_or_404()
+        event = EventsModel.query.filter_by(id=user.event_id).first()
 
         session.commit()
+        
+        if event == None:
+            return jsonify({
+            "id": user.id,
+            "name": user.name,
+            "email": user.email,
+            "address": user.address,
+        }), 200
 
         return jsonify({
             "id": user.id,
             "name": user.name,
             "email": user.email,
             "address": user.address,
-            "event": user.events
+            "event": event
         }), 200
 
     except NotFound:
@@ -266,4 +277,26 @@ def recuperate_password():
             server.sendmail(email_send["From"], email_send["To"], email_send.as_string())
         return {"message": "Email sent"}
     except NotFound:
+<<<<<<< HEAD
+        return {"error": "Email Not Found"}, 404
+
+
+@jwt_required()
+def unsub_event(id):
+    session = current_app.db.session
+
+    try:
+        user = UserModel.query.filter_by(id=id).first_or_404()
+        
+        if user.event_id:        
+            UserModel.query.filter_by(id=id).update({'event_id': None})
+            session.commit()
+            return {'msg': 'Successfully unsubscribed from event.'}, 200
+        
+        return {"error": "User not subscribed in any event."}, 404
+
+    except NotFound:
+        return {"error": "User not found."}, 404
+=======
         return {"error": "Email Not Found!"}, 404
+>>>>>>> 9f6b6ca54c09727edad7fc2dae617c94360f71d8
