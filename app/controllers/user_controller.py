@@ -14,6 +14,7 @@ from flask_jwt_extended import jwt_required
 from app.models.prize_model import PrizeModel
 from io import BytesIO
 
+
 def login():
     try:
         data = request.get_json()
@@ -55,7 +56,7 @@ def create_user():
         return {'id': user.id, 'name': user.name, 'email': user.email, 'points': user.points}, 201
 
     except InvalidInput as error:
-            return(*error.args, 400)
+        return(*error.args, 400)
 
     except InvalidKey as error:
         return(*error.args, 400)
@@ -70,14 +71,12 @@ def update_avatar(id):
     user_avatar = request.files['avatar']
 
     user = UserModel.query.filter_by(id=id).first_or_404()
-    
-    
+
     if user.avatar_id != None:
         old_avatar = AvatarModel.query.get(user.avatar_id)
         session.delete(old_avatar)
         session.commit()
-        
-    
+
     filename = secure_filename(user_avatar.filename)
     img = AvatarModel(data=user_avatar.read(), name=filename)
     session.add(img)
@@ -88,49 +87,33 @@ def update_avatar(id):
 
     return '', 204
 
+
 @jwt_required()
 def user_info(id):
     try:
         session = current_app.db.session
         user = UserModel.query.filter_by(id=id).first_or_404()
-        
+
         session.commit()
 
-        if user.address == None:
-            raise AddressError
-
-    
         return jsonify({
             "id": user.id,
             "name": user.name,
             "email": user.email,
-            "address": {
-                "street": user.address.street,
-                "number": user.address.number,
-                "district": user.address.district,
-                "city": user.address.city,
-                "state": user.address.state,
-                "zip_code": user.address.zip_code
-            },
+            "address": user.address,
             "event": user.events
         }), 200
-        
+
     except NotFound:
         return {"error": "User not found"}, 404
-    except AddressError:
-         return jsonify({
-            "id": user.id,
-            "name": user.name,
-            "email": user.email,
-            "event": user.events
-        }), 200
+
 
 @jwt_required()
 def delete_user(id):
     try:
         session = current_app.db.session
         query = UserModel.query.filter_by(id=id).first_or_404()
-    
+
         session.delete(query)
         session.commit()
 
@@ -140,18 +123,47 @@ def delete_user(id):
 
 
 @jwt_required()
+def create_address(id):
+
+    try:
+        session = current_app.db.session
+        data = request.get_json()
+
+        user: UserModel = UserModel.query.get(id)
+        addrres_local = AddressModel(**data)
+
+        if not user:
+            raise NotFound()
+
+        session.add(addrres_local)
+        session.commit()
+
+        user.address_id = addrres_local.id
+
+        session.add(user)
+        session.commit()
+
+        return jsonify(addrres_local)
+
+    except NotFound:
+        return jsonify({"error": "User not found"}), 404
+
+    except exc.IntegrityError:
+        return jsonify({"expected_keys": ["street", "number", "district", "city", "state", "zip_code"], "received": [key for key in data.keys()]}), 409
+
+
+@jwt_required()
 def update_address(id):
     session = current_app.db.session
     data = request.get_json()
-    
-    address = AddressModel(**data)
-    session.add(address)
+
+    user: UserModel = UserModel.query.filter_by(id=id).first()
+    address = AddressModel.query.filter_by(id=user.address.id).update(data)
+
     session.commit()
-    
-    user = UserModel.query.filter_by(id=id).update({'address_id': address.id})
-    session.commit()
-    
+
     return {'msg': 'Address registered!'}
+
 
 @jwt_required()
 def update_user(id):
@@ -159,7 +171,7 @@ def update_user(id):
     try:
         session = current_app.db.session
         data = request.get_json()
-        
+
         user = UserModel.query.get_or_404(id)
 
         for key, value in data.items():
@@ -179,34 +191,34 @@ def signup_event(id):
     session = current_app.db.session
     data = request.get_json()
     name = data['name']
-    
+
     try:
         event = EventsModel.query.filter_by(name=name).first_or_404()
-        
+
         UserModel.query.filter_by(id=id).update({'event_id': event.id})
- 
-        
+
         session.commit()
-        
-        return {'id': event.id, 'name': event.name, 'date': event.date, 'duration': event.duration, 'description': event.description }, 200       
-    
+
+        return {'id': event.id, 'name': event.name, 'date': event.date, 'duration': event.duration, 'description': event.description}, 200
+
     except NotFound:
         return {"error": "Event not found"}, 404
 
 
 @jwt_required()
 def view_prizes():
-    
+
     prize = PrizeModel.query.all()
 
     return jsonify({"data": prize})
 
+
 @jwt_required()
 def user_avatar(id):
-    try:    
+    try:
         avatar = UserModel.query.filter_by(id=id).first_or_404()
         file_data = AvatarModel.query.filter_by(id=avatar.avatar_id).one()
-        
+
         return send_file(BytesIO(file_data.data), attachment_filename=file_data.name, as_attachment=False)
 
     except NotFound:

@@ -96,3 +96,25 @@ def create_event():
 
     except InvalidInput as e:
         return jsonify(*e.args), 400
+
+
+@jwt_required()
+def get_one_company(id):
+    try:
+        company = CompanyModel.query.filter_by(id=id).first_or_404()
+        return jsonify(company)
+
+    except NotFound:
+        return {"error": "Company not found"}, 404
+
+
+@jwt_required()
+def get_all_companies():
+    companies = CompanyModel.query.all()
+
+    return jsonify([{
+        "id": company.id,
+        "name": company.name,
+        "email": company.email,
+        "avatar_id": company.avatar_id,
+    } for company in companies]), 200
