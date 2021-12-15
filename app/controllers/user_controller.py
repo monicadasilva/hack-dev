@@ -361,13 +361,8 @@ def authorize():
         }), 200
 
     session['profile'] = user_info
-<<<<<<< app/controllers/user_controller.py
     session.permanent = True
-    return redirect('/')
-=======
-    session.permanent = True 
     return redirect('/users/dashboard')
->>>>>>> app/controllers/user_controller.py
 
 
 def logout():
@@ -376,7 +371,6 @@ def logout():
     return redirect('/')
 
 
-<<<<<<< app/controllers/user_controller.py
 @jwt_required()
 def create_feedback(id):
     try:
@@ -430,14 +424,15 @@ def read_feedbacks(id):
         })
     except PermissionError:
         return jsonify({"msg": "Only the administrator has access to feedback from another user"}), 401
-=======
+
+
 def generate_report_user(id_user):
     try:
 
         user: UserModel = UserModel.query.filter_by(id=id_user).first_or_404()
-        
+
         feedbacks = [feed.feedback for feed in user.feedbacks]
-        
+
         generate_pdf(user.name, user.email, user.points, feedbacks)
 
         name = user.name.split(' ')[0]
@@ -446,4 +441,3 @@ def generate_report_user(id_user):
 
     except NotFound:
         return jsonify({"msg": "user not found"}), 404
->>>>>>> app/controllers/user_controller.py
