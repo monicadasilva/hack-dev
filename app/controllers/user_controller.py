@@ -1,13 +1,11 @@
-from flask import request, current_app, jsonify, send_file
-from sqlalchemy.sql.elements import Null
-from sqlalchemy.sql.expression import null
-from sqlalchemy.util.langhelpers import NoneType
+from flask import request, current_app, jsonify, send_file, redirect, url_for, session
 from werkzeug.utils import secure_filename
 from app.controllers import generate_password, verify
 from app.exceptions.exceptions import AddressError, AvatarError, InvalidInput, InvalidKey
 from app.models.address_model import AddressModel
 from app.models.avatar_model import AvatarModel
 from app.models.event_model import EventsModel
+from app.models.group_model import GroupModel
 from app.models.users_model import UserModel
 from flask_jwt_extended import create_access_token
 from sqlalchemy import exc
@@ -21,6 +19,8 @@ import smtplib
 from werkzeug.security import generate_password_hash
 import os
 from dotenv import load_dotenv
+from io import BytesIO
+from app.configs.google import oauth, google
 
 load_dotenv()
 
@@ -41,8 +41,7 @@ def login():
                     "name": user.name,
                     "email": user.email,
                     "points": user.points,
-                    "address": user.address,
-                    "event": user.events
+                    "address": user.address
                 }
             }), 200
         else:
@@ -103,24 +102,16 @@ def user_info(id):
     try:
         session = current_app.db.session
         user = UserModel.query.filter_by(id=id).first_or_404()
-        event = EventsModel.query.filter_by(id=user.event_id).first()
 
         session.commit()
-        
-        if event == None:
-            return jsonify({
-            "id": user.id,
-            "name": user.name,
-            "email": user.email,
-            "address": user.address,
-        }), 200
 
         return jsonify({
             "id": user.id,
             "name": user.name,
             "email": user.email,
             "address": user.address,
-            "event": event
+            "event": user.events,
+            "group": user.group
         }), 200
 
     except NotFound:
@@ -246,6 +237,34 @@ def user_avatar(id):
         return {"error": "Avatar not found"}, 404
 
 
+@jwt_required()
+def create_group(id):
+    try:
+        session = current_app.db.session
+        data = request.get_json()
+
+        user: UserModel = UserModel.query.filter_by(id=id).first_or_404()
+        group = GroupModel(event_id=user.event_id)
+        group.users.append(user)
+
+        if bool(data):
+            for username in data["users"]:
+                _user = UserModel.query.filter_by(name=username).first()
+                if not _user.event_id:
+                    raise InvalidInput
+                group.users.append(_user)
+
+        session.add(group)
+        session.commit()
+
+        return jsonify(group), 201
+    except exc.IntegrityError:
+        return jsonify({"msg": "you need to be registered for an event to create a group"}), 400
+    except NotFound:
+        return jsonify({"msg": "User not found"}), 404
+    except InvalidInput:
+        return jsonify({"msg": "one or more users are not registered for an event"}), 400
+
 def recuperate_password():
 
     try:
@@ -296,3 +315,47 @@ def unsub_event(id):
 
     except NotFound:
         return {"error": "User not found."}, 404
+
+
+def google_login():
+    google = oauth.create_client('google') 
+    redirect_uri = url_for('bp_user.authorize', _external=True)
+    return google.authorize_redirect(redirect_uri)
+
+
+def authorize():
+    dbsession = current_app.db.session
+    
+    google = oauth.create_client('google')
+    token = google.authorize_access_token() 
+    resp = google.get('userinfo') 
+    user_info = resp.json()
+    user = oauth.google.userinfo()  
+    
+    user_data = {'name': user.name, 'email': user.email}
+    user_db = UserModel.query.filter_by(email=user.email).first()
+    
+    if user_db == None:
+        new_user = UserModel(**user_data)
+        dbsession.add(new_user)
+        dbsession.commit()
+        return jsonify({
+                "token": token,
+                "user": {
+                    "id": new_user.id,
+                    "name": new_user.name,
+                    "email": new_user.email,
+                    "points": new_user.points,
+                    "address": new_user.address
+                }
+            }), 200
+    
+    session['profile'] = user_info
+    session.permanent = True 
+    return redirect('/')
+
+
+def logout():
+    for key in list(session.keys()):
+        session.pop(key)
+    return redirect('/')
