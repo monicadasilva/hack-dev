@@ -4,15 +4,15 @@
 
 [![forthebadge made-with-python](http://ForTheBadge.com/images/badges/made-with-python.svg)](https://www.python.org/)
 
-<HACK_DEV/> is a fullstack project, developed with the purpose of being a platform for the creation and execution of hackthons, where companies can generate the event demand and the application administrators initiate the creation and publicize of the event.
+<HACK_DEV/> is a fullstack project, developed with the purpose of being a platform for the creation and execution of hackathons, where companies can generate the event demand and the application administrators initiate the creation and publicize of the event.
 The platform also has a registry of developers who can participate in the events, and exchange accumulated points for prizes.
 
 ## Features
 
-- Components can create their own hackthons
+- Companies can create their own hackathons
 - Developers can choose the event they will participate in
 - Each event scores the best developer
-- All participants earn points that can be accumulated and exchanged for ✨prizes✨
+- All participants earn points that can be exchanged for ✨prizes✨
 
 ## Techs
 
