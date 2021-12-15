@@ -1,17 +1,18 @@
-import os
-from flask import request, current_app, jsonify
+from flask import request, current_app, jsonify,redirect, url_for, session
 from app.controllers import verify, verify_event, generate_password
 from app.exceptions.exceptions import InvalidInput, InvalidKey
 from sqlalchemy.exc import IntegrityError
 from app.models.company_model import CompanyModel
 from flask_jwt_extended import create_access_token, jwt_required, decode_token
 from werkzeug.exceptions import NotFound
+from app.configs.google import oauth, google
 from app.models.event_model import EventsModel
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import ssl
 import smtplib
 from werkzeug.security import generate_password_hash
+import os
 
 
 def create_company():
@@ -127,6 +128,46 @@ def get_all_companies():
     } for company in companies]), 200
 
 
+def google_login():
+    google = oauth.create_client('google') 
+    redirect_uri = url_for('bp_company.authorize', _external=True)
+    return google.authorize_redirect(redirect_uri)
+
+
+def authorize():
+    dbsession = current_app.db.session
+    
+    google = oauth.create_client('google')
+    token = google.authorize_access_token() 
+    resp = google.get('userinfo') 
+    user_info = resp.json()
+    user = oauth.google.userinfo()  
+    
+    user_data = {'name': user.name, 'email': user.email}
+    user_db = CompanyModel.query.filter_by(email=user.email).first()
+    
+    if user_db == None:
+        new_user = CompanyModel(**user_data)
+        dbsession.add(new_user)
+        dbsession.commit()
+        return jsonify({
+                "token": token,
+                "user": {
+                    "id": new_user.id,
+                    "name": new_user.name,
+                    "email": new_user.email,
+                }
+            }), 200
+    
+    session['profile'] = user_info
+    session.permanent = True 
+    return redirect('/company/dashboard')
+
+
+def logout():
+    for key in list(session.keys()):
+        session.pop(key)
+    return redirect('/')
 def recuperate_password():
 
     try:

@@ -352,7 +352,7 @@ def authorize():
     
     session['profile'] = user_info
     session.permanent = True 
-    return redirect('/')
+    return redirect('/users/dashboard')
 
 
 def logout():
