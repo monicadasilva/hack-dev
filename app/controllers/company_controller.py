@@ -130,7 +130,7 @@ def get_all_companies():
 
 def google_login():
     google = oauth.create_client('google') 
-    redirect_uri = url_for('bp_user.authorize', _external=True)
+    redirect_uri = url_for('bp_company.authorize', _external=True)
     return google.authorize_redirect(redirect_uri)
 
 
