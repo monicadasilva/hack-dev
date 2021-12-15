@@ -1,11 +1,11 @@
 from flask import Blueprint
 from app.controllers.user_controller import authorize, create_address, create_group, create_user, delete_user, google_login, login, logout, recuperate_password, signup_event, unsub_event, update_avatar, user_avatar, user_info, update_address, update_user, view_prizes
 from flask_jwt_extended import jwt_required
-from flask_cors import CORS
+
 
 bp = Blueprint("bp_user", __name__, url_prefix="/users")
 
-CORS(bp)
+
 
 bp.post("/login")(login)
 
