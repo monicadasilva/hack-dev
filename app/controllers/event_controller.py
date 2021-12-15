@@ -34,7 +34,7 @@ def pdf_event(id):
     try:
         event_one = EventsModel.query.filter_by(id=id).first_or_404()
         users = UserModel.query.filter_by(event_id=event_one.id).all()
-        return jsonify(users)
+        return jsonify({"users": users, "quantity_users": len(users)})
 
     except NotFound:
         return {"error": "Event not found"}, 404
