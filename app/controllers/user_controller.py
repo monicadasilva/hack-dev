@@ -1,5 +1,5 @@
 from flask import request, current_app, jsonify, send_file, redirect, url_for, session
-from werkzeug.utils import secure_filename
+from werkzeug.utils import secure_filename, send_from_directory
 from app.controllers import generate_password, verify
 from app.exceptions.exceptions import AddressError, AvatarError, InvalidInput, InvalidKey
 from app.models.address_model import AddressModel
@@ -21,6 +21,8 @@ import os
 from dotenv import load_dotenv
 from io import BytesIO
 from app.configs.google import oauth, google
+from app.utils import generate_pdf
+
 
 load_dotenv()
 
@@ -359,3 +361,20 @@ def logout():
     for key in list(session.keys()):
         session.pop(key)
     return redirect('/')
+
+
+def generate_report_user(id_user):
+    try:
+
+        user: UserModel = UserModel.query.filter_by(id=id_user).first_or_404()
+        
+        feedbacks = [feed.feedback for feed in user.feedbacks]
+        
+        generate_pdf(user.name, user.email, user.points, feedbacks)
+
+        name = user.name.split(' ')[0]
+
+        return send_file(f'/tmp/{name}.pdf')
+
+    except NotFound:
+        return jsonify({"msg": "user not found"}), 404
