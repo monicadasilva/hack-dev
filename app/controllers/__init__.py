@@ -1,3 +1,4 @@
+from flask_jwt_extended import decode_token
 from app.exceptions.exceptions import InvalidInput, InvalidKey
 import string
 import secrets
@@ -77,3 +78,21 @@ def generate_password(comprimento):
     password_characters = string.ascii_letters
     password = ''.join(secrets.choice(password_characters) for i in range(comprimento))
     return password
+
+
+def token_decoded(request) -> dict:
+    token = request.headers["Authorization"][7:]
+    return decode_token(token)
+
+
+def verify_owner(request, Model, id=0) -> bool:
+
+    data_token = token_decoded(request)["sub"]
+    query = Model.query.filter_by(email=data_token["email"]).first()
+
+    if id:
+        if id == query.id:
+            return True
+        return False
+
+    return bool(query)

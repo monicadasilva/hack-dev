@@ -1,8 +1,9 @@
-from flask import jsonify
+from flask import jsonify, send_file
 from werkzeug.exceptions import NotFound
 from app.models.event_model import EventsModel
 from flask_jwt_extended import jwt_required
 from app.models.users_model import UserModel
+from app.utils import generate_event_pdf
 
 @jwt_required()
 def details_event(id):
@@ -34,10 +35,18 @@ def pdf_event(id):
     try:
         event_one = EventsModel.query.filter_by(id=id).first_or_404()
         users = UserModel.query.filter_by(event_id=event_one.id).all()
-        return jsonify({"users": users, "quantity_users": len(users)})
+        
+        generate_event_pdf(event_one.name, users, event_one.date, event_one.duration)
+
+        name = event_one.name.split(' ')[0]
+        
+        return send_file(f'/tmp/{name}.pdf')
+        
 
     except NotFound:
         return {"error": "Event not found"}, 404
+
+
 
 @jwt_required()
 def users_event(id):

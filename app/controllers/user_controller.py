@@ -1,10 +1,12 @@
 from flask import request, current_app, jsonify, send_file, redirect, url_for, session
 from werkzeug.utils import secure_filename, send_from_directory
-from app.controllers import generate_password, verify
+from app.controllers import generate_password, token_decoded, verify, verify_owner
 from app.exceptions.exceptions import AddressError, AvatarError, InvalidInput, InvalidKey
 from app.models.address_model import AddressModel
+from app.models.admin_model import AdminModel
 from app.models.avatar_model import AvatarModel
 from app.models.event_model import EventsModel
+from app.models.feedback_model import FeedbackModel
 from app.models.group_model import GroupModel
 from app.models.users_model import UserModel
 from flask_jwt_extended import create_access_token
@@ -113,7 +115,8 @@ def user_info(id):
             "email": user.email,
             "address": user.address,
             "event": user.events,
-            "group": user.group
+            "group": user.group,
+            "feedbacks": user.feedback
         }), 200
 
     except NotFound:
@@ -267,6 +270,7 @@ def create_group(id):
     except InvalidInput:
         return jsonify({"msg": "one or more users are not registered for an event"}), 400
 
+
 def recuperate_password():
 
     try:
@@ -307,12 +311,16 @@ def unsub_event(id):
 
     try:
         user = UserModel.query.filter_by(id=id).first_or_404()
-        
-        if user.event_id:        
+
+        if user.event_id:
             UserModel.query.filter_by(id=id).update({'event_id': None})
+            group = GroupModel.query.filter_by(id=user.group.id).first()
+            if len(group.users) == 0:
+                session.delete(group)
+            user.group = None
             session.commit()
             return {'msg': 'Successfully unsubscribed from event.'}, 200
-        
+
         return {"error": "User not subscribed in any event."}, 404
 
     except NotFound:
@@ -320,40 +328,40 @@ def unsub_event(id):
 
 
 def google_login():
-    google = oauth.create_client('google') 
+    google = oauth.create_client('google')
     redirect_uri = url_for('bp_user.authorize', _external=True)
     return google.authorize_redirect(redirect_uri)
 
 
 def authorize():
     dbsession = current_app.db.session
-    
+
     google = oauth.create_client('google')
-    token = google.authorize_access_token() 
-    resp = google.get('userinfo') 
+    token = google.authorize_access_token()
+    resp = google.get('userinfo')
     user_info = resp.json()
-    user = oauth.google.userinfo()  
-    
+    user = oauth.google.userinfo()
+
     user_data = {'name': user.name, 'email': user.email}
     user_db = UserModel.query.filter_by(email=user.email).first()
-    
+
     if user_db == None:
         new_user = UserModel(**user_data)
         dbsession.add(new_user)
         dbsession.commit()
         return jsonify({
-                "token": token,
-                "user": {
-                    "id": new_user.id,
-                    "name": new_user.name,
-                    "email": new_user.email,
-                    "points": new_user.points,
-                    "address": new_user.address
-                }
-            }), 200
-    
+            "token": token,
+            "user": {
+                "id": new_user.id,
+                "name": new_user.name,
+                "email": new_user.email,
+                "points": new_user.points,
+                "address": new_user.address
+            }
+        }), 200
+
     session['profile'] = user_info
-    session.permanent = True 
+    session.permanent = True
     return redirect('/users/dashboard')
 
 
@@ -363,13 +371,68 @@ def logout():
     return redirect('/')
 
 
+@jwt_required()
+def create_feedback(id):
+    try:
+        session = current_app.db.session
+        user_decoded = token_decoded(request)
+        user_id = user_decoded["sub"]["id"]
+        data = request.get_json()
+
+        author: UserModel = UserModel.query.filter_by(id=user_id).first()
+        user_target: UserModel = UserModel.query.filter_by(id=id).first()
+
+        if not author.group:
+            raise InvalidInput("You are not subscribed to any group")
+
+        if not user_target.group:
+            raise InvalidInput("target user is not subscribed to any group")
+
+        if not author.group.id == user_target.group.id:
+            raise AttributeError
+
+        feedback: FeedbackModel = FeedbackModel(
+            event_id=author.event_id, user_id=user_target.id, feedback=data["feedback"])
+
+        session.add(feedback)
+        session.commit()
+
+        return jsonify({
+            "id": feedback.id,
+            "feedback": feedback.feedback,
+            "user": {"id": feedback.user_id, "name": feedback.user.name},
+            "event": {"id": feedback.event_id, "name": feedback.event.name}
+        }), 201
+    except AttributeError:
+        return jsonify({"msg": "You are not allowed to give feedback to users from other groups"}), 400
+    except InvalidInput as e:
+        return jsonify(*e.args), 400
+    except (TypeError, KeyError):
+        return jsonify({"msg": "Expected key 'feedback' with your comment about the target user"}), 400
+
+
+@jwt_required()
+def read_feedbacks(id):
+    try:
+        if not verify_owner(request, AdminModel) and not verify_owner(request, UserModel, id):
+            raise PermissionError
+
+        user: UserModel = UserModel.query.filter_by(id=id).first_or_404()
+
+        return jsonify({
+            "feedbacks": user.feedback
+        })
+    except PermissionError:
+        return jsonify({"msg": "Only the administrator has access to feedback from another user"}), 401
+
+
 def generate_report_user(id_user):
     try:
 
         user: UserModel = UserModel.query.filter_by(id=id_user).first_or_404()
-        
+
         feedbacks = [feed.feedback for feed in user.feedbacks]
-        
+
         generate_pdf(user.name, user.email, user.points, feedbacks)
 
         name = user.name.split(' ')[0]
