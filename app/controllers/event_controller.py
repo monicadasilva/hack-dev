@@ -2,7 +2,7 @@ from flask import jsonify
 from werkzeug.exceptions import NotFound
 from app.models.event_model import EventsModel
 from flask_jwt_extended import jwt_required
-
+from app.models.users_model import UserModel
 
 @jwt_required()
 def details_event(id):
@@ -27,3 +27,24 @@ def read_events():
         "duration": event.duration,
         "skills": event.skills,
     } for event in events]), 200
+
+
+@jwt_required()
+def pdf_event(id):
+    try:
+        event_one = EventsModel.query.filter_by(id=id).first_or_404()
+        users = UserModel.query.filter_by(event_id=event_one.id).all()
+        return jsonify({"users": users, "quantity_users": len(users)})
+
+    except NotFound:
+        return {"error": "Event not found"}, 404
+
+@jwt_required()
+def users_event(id):
+    try:
+        event_one = EventsModel.query.filter_by(id=id).first_or_404()
+        users = UserModel.query.filter_by(event_id=event_one.id).all()
+        return jsonify({"users": users, "quantity_users": len(users)})
+
+    except NotFound:
+        return {"error": "Event not found"}, 404

@@ -1,5 +1,5 @@
 from flask import request, current_app, jsonify, send_file, redirect, url_for, session
-from werkzeug.utils import secure_filename
+from werkzeug.utils import secure_filename, send_from_directory
 from app.controllers import generate_password, token_decoded, verify, verify_owner
 from app.exceptions.exceptions import AddressError, AvatarError, InvalidInput, InvalidKey
 from app.models.address_model import AddressModel
@@ -23,6 +23,8 @@ import os
 from dotenv import load_dotenv
 from io import BytesIO
 from app.configs.google import oauth, google
+from app.utils import generate_pdf
+
 
 load_dotenv()
 
@@ -359,8 +361,13 @@ def authorize():
         }), 200
 
     session['profile'] = user_info
+<<<<<<< app/controllers/user_controller.py
     session.permanent = True
     return redirect('/')
+=======
+    session.permanent = True 
+    return redirect('/users/dashboard')
+>>>>>>> app/controllers/user_controller.py
 
 
 def logout():
@@ -369,6 +376,7 @@ def logout():
     return redirect('/')
 
 
+<<<<<<< app/controllers/user_controller.py
 @jwt_required()
 def create_feedback(id):
     try:
@@ -422,3 +430,20 @@ def read_feedbacks(id):
         })
     except PermissionError:
         return jsonify({"msg": "Only the administrator has access to feedback from another user"}), 401
+=======
+def generate_report_user(id_user):
+    try:
+
+        user: UserModel = UserModel.query.filter_by(id=id_user).first_or_404()
+        
+        feedbacks = [feed.feedback for feed in user.feedbacks]
+        
+        generate_pdf(user.name, user.email, user.points, feedbacks)
+
+        name = user.name.split(' ')[0]
+
+        return send_file(f'/tmp/{name}.pdf')
+
+    except NotFound:
+        return jsonify({"msg": "user not found"}), 404
+>>>>>>> app/controllers/user_controller.py
