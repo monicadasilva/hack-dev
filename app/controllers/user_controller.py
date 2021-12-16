@@ -171,13 +171,27 @@ def create_address(id):
 def update_address(id):
     session = current_app.db.session
     data = request.get_json()
+    try:
+        user: UserModel = UserModel.query.filter_by(id=id).first_or_404()
+        
+        if user.address_id == None:        
+            address = AddressModel(**data)
+            session.add(address)
+            session.commit()
+            user.address_id = address.id
+            session.commit()
 
-    user: UserModel = UserModel.query.filter_by(id=id).first()
-    address = AddressModel.query.filter_by(id=user.address.id).update(data)
+        
+        AddressModel.query.filter_by(id=user.address_id).update(data)
+        session.commit()
+       
+        if not user:
+            raise NotFound()
 
-    session.commit()
+        return {'msg': 'Address registered!'}
 
-    return {'msg': 'Address registered!'}
+    except NotFound:
+            return jsonify({"error": "User not found"}), 404
 
 
 @jwt_required()
