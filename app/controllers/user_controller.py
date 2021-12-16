@@ -431,7 +431,10 @@ def generate_report_user(id_user):
 
         user: UserModel = UserModel.query.filter_by(id=id_user).first_or_404()
 
-        feedbacks = [feed.feedback for feed in user.feedbacks]
+        if 'feedbacks' not in user.__dict__.keys():
+            feedbacks = []
+        else:
+            feedbacks = [feed.feedback for feed in user.feedbacks]
 
         generate_pdf(user.name, user.email, user.points, feedbacks)
 
