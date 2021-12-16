@@ -173,25 +173,24 @@ def update_address(id):
     data = request.get_json()
     try:
         user: UserModel = UserModel.query.filter_by(id=id).first_or_404()
-        
-        if user.address_id == None:        
+
+        if user.address_id == None:
             address = AddressModel(**data)
             session.add(address)
             session.commit()
             user.address_id = address.id
             session.commit()
 
-        
         AddressModel.query.filter_by(id=user.address_id).update(data)
         session.commit()
-       
+
         if not user:
             raise NotFound()
 
         return {'msg': 'Address registered!'}
 
     except NotFound:
-            return jsonify({"error": "User not found"}), 404
+        return jsonify({"error": "User not found"}), 404
 
 
 @jwt_required()
@@ -228,7 +227,7 @@ def signup_event(id):
 
         session.commit()
 
-        return {'id': event.id, 'name': event.name, 'date': event.date, 'duration': event.duration, 'description': event.description}, 200
+        return {'id': event.id, 'name': event.name, 'date': event.date, 'duration': event.duration, 'description': event.description, 'invitation': 'https://discord.gg/ApVraPPX'}, 200
 
     except NotFound:
         return {"error": "Event not found"}, 404
