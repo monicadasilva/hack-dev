@@ -105,8 +105,7 @@ def update_avatar(id):
 def user_info(id):
     try:
         session = current_app.db.session
-        user = UserModel.query.filter_by(id=id).first_or_404()
-
+        user: UserModel = UserModel.query.filter_by(id=id).first_or_404()
         session.commit()
 
         return jsonify({
@@ -115,6 +114,7 @@ def user_info(id):
             "email": user.email,
             "address": user.address,
             "event": user.events,
+            "points": user.points,
             "group": user.group,
             "feedbacks": user.feedback
         }), 200
