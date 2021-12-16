@@ -314,10 +314,11 @@ def unsub_event(id):
 
         if user.event_id:
             UserModel.query.filter_by(id=id).update({'event_id': None})
-            group = GroupModel.query.filter_by(id=user.group.id).first()
-            if len(group.users) == 0:
-                session.delete(group)
-            user.group = None
+            if user.group:
+                group = GroupModel.query.filter_by(id=user.group.id).first()
+                if len(group.users) == 0:
+                    session.delete(group)
+                user.group = None
             session.commit()
             return {'msg': 'Successfully unsubscribed from event.'}, 200
 
