@@ -90,7 +90,7 @@ def verify_owner(request, Model, id=0) -> bool:
     data_token = token_decoded(request)["sub"]
     query = Model.query.filter_by(email=data_token["email"]).first()
 
-    if id:
+    if id and query:
         if id == query.id:
             return True
         return False

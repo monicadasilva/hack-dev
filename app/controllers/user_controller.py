@@ -414,8 +414,9 @@ def create_feedback(id):
 @jwt_required()
 def read_feedbacks(id):
     try:
-        if not verify_owner(request, AdminModel) and not verify_owner(request, UserModel, id):
-            raise PermissionError
+        if not verify_owner(request, UserModel, id):
+            if not verify_owner(request, AdminModel):
+                raise PermissionError
 
         user: UserModel = UserModel.query.filter_by(id=id).first_or_404()
 
