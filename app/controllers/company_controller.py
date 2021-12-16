@@ -161,7 +161,7 @@ def authorize():
     
     session['profile'] = user_info
     session.permanent = True 
-    return redirect('/company/dashboard')
+    return jsonify({'name': user.name, 'email': user.email, 'avatar': user.picture}), 200
 
 
 def logout():
