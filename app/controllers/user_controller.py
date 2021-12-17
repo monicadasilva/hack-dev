@@ -105,8 +105,7 @@ def update_avatar(id):
 def user_info(id):
     try:
         session = current_app.db.session
-        user = UserModel.query.filter_by(id=id).first_or_404()
-
+        user: UserModel = UserModel.query.filter_by(id=id).first_or_404()
         session.commit()
 
         return jsonify({
@@ -115,6 +114,7 @@ def user_info(id):
             "email": user.email,
             "address": user.address,
             "event": user.events,
+            "points": user.points,
             "group": user.group,
             "feedbacks": user.feedback
         }), 200
@@ -171,13 +171,26 @@ def create_address(id):
 def update_address(id):
     session = current_app.db.session
     data = request.get_json()
+    try:
+        user: UserModel = UserModel.query.filter_by(id=id).first_or_404()
 
-    user: UserModel = UserModel.query.filter_by(id=id).first()
-    address = AddressModel.query.filter_by(id=user.address.id).update(data)
+        if user.address_id == None:
+            address = AddressModel(**data)
+            session.add(address)
+            session.commit()
+            user.address_id = address.id
+            session.commit()
 
-    session.commit()
+        AddressModel.query.filter_by(id=user.address_id).update(data)
+        session.commit()
 
-    return {'msg': 'Address registered!'}
+        if not user:
+            raise NotFound()
+
+        return {'msg': 'Address registered!'}
+
+    except NotFound:
+        return jsonify({"error": "User not found"}), 404
 
 
 @jwt_required()
@@ -214,7 +227,7 @@ def signup_event(id):
 
         session.commit()
 
-        return {'id': event.id, 'name': event.name, 'date': event.date, 'duration': event.duration, 'description': event.description}, 200
+        return {'id': event.id, 'name': event.name, 'date': event.date, 'duration': event.duration, 'description': event.description, 'invitation': 'https://discord.gg/ApVraPPX'}, 200
 
     except NotFound:
         return {"error": "Event not found"}, 404
@@ -314,10 +327,11 @@ def unsub_event(id):
 
         if user.event_id:
             UserModel.query.filter_by(id=id).update({'event_id': None})
-            group = GroupModel.query.filter_by(id=user.group.id).first()
-            if len(group.users) == 0:
-                session.delete(group)
-            user.group = None
+            if user.group:
+                group = GroupModel.query.filter_by(id=user.group.id).first()
+                if len(group.users) == 0:
+                    session.delete(group)
+                user.group = None
             session.commit()
             return {'msg': 'Successfully unsubscribed from event.'}, 200
 
@@ -362,7 +376,7 @@ def authorize():
 
     session['profile'] = user_info
     session.permanent = True
-    return redirect('/users/dashboard')
+    return  jsonify({'name': user.name, 'email': user.email, 'avatar': user.picture}), 200
 
 
 def logout():

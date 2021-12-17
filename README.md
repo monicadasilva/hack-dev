@@ -22,4 +22,4 @@ The platform also has a registry of developers who can participate in the events
 
 ## Documetation
 
-##### [Postman](https://documenter.getpostman.com/view/18248829/UVR4LpTHhttps://documenter.getpostman.com/view/18248829/UVR4LpTH) - [API](https://hack-dev.herokuapp.com)
+##### [Postman](https://documenter.getpostman.com/view/18248829/UVR8poBn) - [API](https://hack-dev.herokuapp.com)

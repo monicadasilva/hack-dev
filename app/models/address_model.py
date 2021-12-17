@@ -19,8 +19,7 @@ class AddressModel(db.Model):
     id = Column(Integer, primary_key=True)
     street = Column(String(100), nullable=False)
     number = Column(Integer, nullable=False)
-    district = Column(Integer, nullable=False)
+    district = Column(String, nullable=False)
     city = Column(String, nullable=False)
     state = Column(String, nullable=False)
     zip_code = Column(String, nullable=False)
-
