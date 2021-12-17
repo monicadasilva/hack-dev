@@ -376,7 +376,7 @@ def authorize():
 
     session['profile'] = user_info
     session.permanent = True
-    return  jsonify({'name': user.name, 'email': user.email, 'avatar': user.picture}), 200
+    return jsonify({'name': user.name, 'email': user.email, 'avatar': user.picture}), 200
 
 
 def logout():
@@ -446,10 +446,10 @@ def generate_report_user(id_user):
 
         user: UserModel = UserModel.query.filter_by(id=id_user).first_or_404()
 
-        if 'feedbacks' not in user.__dict__.keys():
+        if not user.feedback:
             feedbacks = []
         else:
-            feedbacks = [feed.feedback for feed in user.feedbacks]
+            feedbacks = [feed.feedback for feed in user.feedback]
 
         generate_pdf(user.name, user.email, user.points, feedbacks)
 
